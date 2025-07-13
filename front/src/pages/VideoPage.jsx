@@ -1,16 +1,9 @@
-import React, { useState } from "react";
 import {
-  ArrowLeft,
-  Eye,
-  Calendar,
-  ThumbsUp,
-  Share2,
-  Download,
-  MoreHorizontal,
-  Play,
+  Play
 } from "lucide-react";
-import VideoPlayer from "../component/VideoPlayer";
+import { useState } from "react";
 import VideoCard from "../component/VideoCard";
+import VideoPlayer from "../component/VideoPlayer";
 import { videosData } from "../data/video";
 
 // Home Component
