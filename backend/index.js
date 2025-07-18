@@ -6,6 +6,9 @@ import fs from "fs";
 import path, { dirname } from "path";
 import { fileURLToPath } from "url";
 import { pipeline } from "stream/promises";
+import { videoQueue } from "./services/videoQueue.js";
+import { startWorker } from "./services/worker.js";
+import { clearAllJobs, getAllJobs } from "./utils/utils.js";
 
 ffmpeg.setFfmpegPath("D:/ffmpeg-7.1.1-essentials_build/bin/ffmpeg.exe");
 
@@ -18,7 +21,7 @@ app.use(cors({ origin: "http://localhost:5173", credentials: true }));
 app.use(express.json());
 
 // Serve processed HLS files
-app.use("/videos", express.static(path.join(__dirname, "processed")));
+app.use("/videos", express.static(path.join(__dirname, "processed/sample")));
 
 // Multer for file uploads
 const upload = multer({ dest: "uploads/" });
@@ -77,9 +80,9 @@ const upload = multer({ dest: "uploads/" });
 // });
 
 // Get transcoded video info
-app.get("/videos/:id/info", (req, res) => {
-  const { id } = req.params;
-  const videoDir = path.join(__dirname, "processed", id);
+app.get("/videos", (req, res) => {
+  // const { id } = req.params;
+  const videoDir = path.join(__dirname, "processed/sample");
   if (!fs.existsSync(videoDir))
     return res.status(404).json({ error: "Not found" });
 
@@ -95,21 +98,26 @@ const CHUNKS_DIR = "./chunks";
 app.post("/upload/chunk", upload.single("file"), (req, res) => {
   const {
     file,
-    body: { totalChunks, currentChunk },
+    body: { filename,totalChunks, currentChunk },
   } = req;
 
   const chunkFilename = `${file.originalname}.${currentChunk}`;
   const chunkPath = `${CHUNKS_DIR}/${chunkFilename}`;
-  
-  console.log("Chunk received:", req.body.currentChunk, "/", req.body.totalChunks);
-  fs.rename(file.path, chunkPath, (err) => {
+
+  console.log(
+    "Chunk received:",
+    req.body.currentChunk,
+    "/",
+    req.body.totalChunks
+  );
+  fs.rename(file.path, chunkPath, async (err) => {
     if (err) {
       console.error("Error moving chunk file:", err);
       return res.status(500).send("Error uploading chunk");
     } else {
       if (+currentChunk === +totalChunks) {
         // All chunks have been uploaded, assemble them into a single file
-        assembleChunks(file.originalname, totalChunks)
+        assembleChunks(filename,file.originalname, totalChunks)
           .then(() => res.send("File uploaded successfully"))
           .catch((err) => {
             console.error("Error assembling chunks:", err);
@@ -122,7 +130,7 @@ app.post("/upload/chunk", upload.single("file"), (req, res) => {
   });
 });
 
-async function assembleChunks(filename, totalChunks) {
+async function assembleChunks(filename,originalname, totalChunks) {
   const outputPath = `./uploads/${filename}`;
 
   // Safety: delete if already exists
@@ -131,7 +139,7 @@ async function assembleChunks(filename, totalChunks) {
   }
 
   for (let i = 1; i <= totalChunks; i++) {
-    const chunkPath = `${CHUNKS_DIR}/${filename}.${i}`;
+    const chunkPath = `${CHUNKS_DIR}/${originalname}.${i}`;
     if (!fs.existsSync(chunkPath)) {
       console.error("Missing chunk:", chunkPath);
       throw new Error(`Missing chunk ${i}`);
@@ -149,9 +157,33 @@ async function assembleChunks(filename, totalChunks) {
     });
   }
 
+  try {
+    const que = await videoQueue.add("transcode", {
+      filename,
+      inputPath: outputPath,
+    });
+    console.log("✅ added in work que: ", que);
+  } catch (error) {
+    console.log("err in adding wokr", error);
+  }
+
   console.log("✅ File assembled:", outputPath);
 }
 
+app.get("/clear-jobs", clearAllJobs);
+
+app.get("/get-jobs",getAllJobs);
+
+app.get("/run-worker", (req, res) => {
+  try {
+    startWorker(__dirname,__filename)
+
+    return res.send("work started");
+  } catch (error) {
+    console.log("work fail", error);
+    return res.send("work failed");
+  }
+});
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);

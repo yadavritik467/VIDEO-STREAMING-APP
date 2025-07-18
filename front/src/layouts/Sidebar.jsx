@@ -17,7 +17,7 @@ const Sidebar = ({ isOpen, currentPage }) => {
 
   return (
     <div
-      className={`fixed left-0 top-0 h-full bg-gray-800 bg-gradient-to-b  from-red-600 to-blue-600 text-white z-40 transition-transform duration-300 ${
+      className={`w-full h-full bg-gray-800 bg-gradient-to-b  from-red-600 to-blue-600 text-white z-40 transition-transform duration-300 ${
         isOpen ? "translate-x-0" : "-translate-x-full"
       } w-64 lg:translate-x-0`}
     >

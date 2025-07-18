@@ -5,11 +5,11 @@ import VideoPage from "./pages/VideoPage";
 
 const App = () => {
   return (
-    <div className="flex w-[100vw] h-[100vh] ">
-      <div className="w-[30%]">
+    <div className="flex w-[100vw] overflow-hidden  h-[100vh] ">
+      <div className="w-[20%]">
         <Sidebar />
       </div>
-      <div className="w-[70%]">
+      <div className="w-[80%] overflow-x-hidden overflow-y-scroll">
         <Routes>
           <Route path="" element={<VideoPage />} />
           <Route path="upload" element={<Upload />} />

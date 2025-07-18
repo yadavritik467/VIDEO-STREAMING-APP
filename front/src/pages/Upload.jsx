@@ -12,6 +12,7 @@ function Upload() {
 
   async function uploadChunk(chunk, totalChunks, currentChunk) {
     const formData = new FormData();
+    formData.append("filename", file.name);
     formData.append("file", chunk);
     formData.append("totalChunks", totalChunks);
     formData.append("currentChunk", currentChunk);
@@ -36,7 +37,6 @@ function Upload() {
     e.preventDefault();
     try {
       setUploadProgress(0);
-      // console.log('file',file)
       const chunkSize = 1024 * 1024; // 1MB
       const totalChunks = Math.ceil(file.size / chunkSize); //104
       setTotalChunksItem(totalChunks);
@@ -53,23 +53,6 @@ function Upload() {
     } catch (error) {
       console.error("Upload error:", error);
     }
-    // =====================> this commented code is working from here
-    // try {
-    //   setUploadProgress(0);
-    //   const formData = new FormData();
-    //   formData.append("video", file);
-    //   const res = await axios.post("http://localhost:4500/upload", formData, {
-    //     onUploadProgress: (progressEvent) => {
-    //       const percent = Math.round(
-    //         (progressEvent.loaded * 100) / progressEvent.total
-    //       );
-    //       setUploadProgress(percent);
-    //     },
-    //   });
-    // } catch (err) {
-    //   console.error("Upload error:", err);
-    // }
-    // =====================> this commented code is working to here
   };
 
   const fetchVideo = async () => {
@@ -109,7 +92,7 @@ function Upload() {
       {uploadProgress > 0 && <p>Uploading: {actualPercentage}%</p>}
 
       <HLSPlayer
-        src={`http://localhost:4500/videos/98a585f3234f268f8203bafb9279f923/720.m3u8`}
+        src={`http://localhost:4500/videos/480.m3u8`}
       />
     </div>
   );

@@ -30,7 +30,7 @@ const Home = ({ videos, searchQuery, onVideoSelect, currentPage }) => {
   };
 
   return (
-    <div className=" overflow-auto lg:ml-64 p-6 bg-gray-900 min-h-screen">
+    <div className="w-full overflow-auto  p-6 bg-gray-900 min-h-screen">
       <div className="max-w-7xl mx-auto">
         <h1 className="text-3xl font-bold text-white mb-8">{getPageTitle()}</h1>
 
